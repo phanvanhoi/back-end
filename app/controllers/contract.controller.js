@@ -29,8 +29,7 @@ exports.create = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Contract.",
+        message: err.message || "Some error occurred while creating the Contract.",
       });
     });
 };
@@ -43,8 +42,7 @@ exports.findAllContract = (req, res) => {
     })
     .catch((err) => {
       res?.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Contracts.",
+        message: err.message || "Some error occurred while retrieving Contracts.",
       });
     });
 };
@@ -59,10 +57,7 @@ exports.downloadExcell = (req, res) => {
   worksheet.getCell("B1").value = "World!";
 
   // Set response headers
-  res.setHeader(
-    "Content-Type",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  );
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader("Content-Disposition", 'attachment; filename="example.xlsx"');
 
   // Send the workbook as a response

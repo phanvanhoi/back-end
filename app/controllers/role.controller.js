@@ -1,22 +1,24 @@
 const db = require("../models");
-const Company = db.company;
-
+const Role = db.role;
+const { roleSchema } = require("../schema/index");
+const { createSchema } = roleSchema;
 // Create and Save a new Contract
 exports.create = (req, res) => {
-  const { name = "" } = req.body;
+  const validate = createSchema.validate(req.body);
   // Validate request
-  if (!req.body.name) {
-    res.status(400).send({ message: "Name can not be empty!" });
+  if (validate.error) {
+    const { message } = validate.error;
+    res.status(422).send({ message });
     return;
   }
 
-  // Create a Company
-  const company = new Company({
-    name,
+  // Create a Role
+  const role = new Role({
+    ...req.body,
   });
 
-  // Save Contract in the database
-  Company.create(company)
+  // Save Role in the database
+  Role.create(role)
     .then((data) => {
       res.send(data);
     })
@@ -28,11 +30,10 @@ exports.create = (req, res) => {
     });
 };
 
-
 exports.getAll = (req, res) => {
-// phanvanhoi.dtu@gmail.com
-// phanhoi1997
-  Company.find()
+  // phanvanhoi.dtu@gmail.com
+  // phanhoi1997
+  Role.find()
     .then((data) => {
       res.send(data);
     })

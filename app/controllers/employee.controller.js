@@ -1,10 +1,13 @@
+/** @format */
+
 const { ObjectId } = require("mongodb");
 const db = require("../models");
 const Employee = db.employee;
+const Role = db.role;
+const Company = db.company;
 const { employeeSchema } = require("../schema/index");
 const { createSchema, updateSchema } = employeeSchema;
 
-// Create and Save a new Contract
 exports.getAll = (req, res) => {
   Employee.find()
     .then((data) => {
@@ -12,25 +15,13 @@ exports.getAll = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Contract.",
+        message: err.message || "Some error occurred while creating the Contract.",
       });
     });
 };
 
-exports.create = (req, res) => {
-  const { name = "", role = "", sex = "", companyId = undefined } = req.body;
+exports.create = async (req, res) => {
   // Validate request
-  const Joi = require("joi");
-
-  const createSchema1 = Joi.object({
-    name: Joi.string().required(),
-    role: Joi.string().required(),
-    birthday: Joi.date(),
-    companyId: Joi.string().required(),
-    sex: Joi.string().valid("nam", "nữ").required(),
-  });
-
   const result = createSchema.validate(req.body);
 
   if (result.error) {
@@ -40,6 +31,25 @@ exports.create = (req, res) => {
   }
 
   // Create a Employee
+  const { role, companyId } = req.body;
+
+  const hasRole = await Role.findOne({ name: role }).exec();
+  if (!hasRole) {
+    res.status(422).send({ message: `"${role}" role have not in the system ` });
+    return;
+  }
+
+  try {
+    const hasCompany = await Company.findOne({ _id: companyId }).exec();
+    if (!hasCompany) {
+      res.status(422).send({ message: `"${companyId}" have not in the system` });
+      return;
+    }
+  } catch (error) {
+    res.status(422).send({ message: `"${companyId}" have not in the system` });
+    return;
+  }
+
   const employee = new Employee({
     ...req.body,
   });
@@ -51,8 +61,7 @@ exports.create = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Contract.",
+        message: err.message || "Some error occurred while creating the Contract.",
       });
     });
 };
@@ -75,8 +84,7 @@ exports.update = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Contract.",
+        message: err.message || "Some error occurred while creating the Contract.",
       });
     });
 };

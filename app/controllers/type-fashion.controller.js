@@ -1,5 +1,5 @@
 const db = require("../models");
-const Company = db.company;
+const TypeFashion = db.typeFashion;
 
 // Create and Save a new Contract
 exports.create = (req, res) => {
@@ -10,13 +10,13 @@ exports.create = (req, res) => {
     return;
   }
 
-  // Create a Company
-  const company = new Company({
+  // Create a TypeFashion
+  const typeFashion = new TypeFashion({
     name,
   });
 
   // Save Contract in the database
-  Company.create(company)
+  TypeFashion.create(typeFashion)
     .then((data) => {
       res.send(data);
     })
@@ -32,7 +32,7 @@ exports.create = (req, res) => {
 exports.getAll = (req, res) => {
 // phanvanhoi.dtu@gmail.com
 // phanhoi1997
-  Company.find()
+  TypeFashion.find()
     .then((data) => {
       res.send(data);
     })
