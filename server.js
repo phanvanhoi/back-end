@@ -36,6 +36,16 @@ app.get("/", (req, res) => {
 
 require("./app/routes/index")(app);
 
+process.on("SIGINT", async () => {
+  try {
+    await client.close();
+    console.log("MongoDB connection closed");
+    process.exit(0);
+  } catch (error) {
+    console.error("Error closing MongoDB connection:", error);
+    process.exit(1);
+  }
+});
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

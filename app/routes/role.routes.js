@@ -10,6 +10,7 @@ module.exports = (app) => {
   
   router.get("/", roles.getAll);
   router.post("/create", roles.create);
+  router.post("/update-by-names", roles.updateByNames);
 
   app.use("/api/roles", router);
 };

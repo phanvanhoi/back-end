@@ -1,6 +1,4 @@
 /** @format */
-
-const { ObjectId } = require("mongodb");
 const db = require("../models");
 const Employee = db.employee;
 const Role = db.role;
@@ -10,8 +8,21 @@ const { createSchema, updateSchema } = employeeSchema;
 
 exports.getAll = (req, res) => {
   Employee.find()
-    .then((data) => {
-      res.send(data);
+    .then(async (data) => {
+      const dataArr = data || [];
+
+      const dataConvert = await dataArr.map(async (data) => {
+        const { roleId, companyId } = data;
+        const roleObj = await Role.findOne({ _id: roleId }).exec();
+        const companyObj = await Company.findOne({ _id: companyId }).exec();
+        const dataObj = {
+          ...data,
+          roleName: roleObj.name,
+          companyName: companyObj.name,
+        };
+        return dataObj;
+      });
+      res.send(dataConvert);
     })
     .catch((err) => {
       res.status(500).send({
@@ -31,11 +42,11 @@ exports.create = async (req, res) => {
   }
 
   // Create a Employee
-  const { role, companyId } = req.body;
+  const { roleId, companyId } = req.body;
 
-  const hasRole = await Role.findOne({ name: role }).exec();
+  const hasRole = await Role.findOne({ _id: roleId }).exec();
   if (!hasRole) {
-    res.status(422).send({ message: `"${role}" role have not in the system ` });
+    res.status(422).send({ message: `"${roleId}" role have not in the system ` });
     return;
   }
 

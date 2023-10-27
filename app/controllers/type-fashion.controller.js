@@ -1,18 +1,22 @@
 const db = require("../models");
 const TypeFashion = db.typeFashion;
 
+const { typeFashion } = require("../schema/index");
+const { createSchema } = typeFashion;
+
 // Create and Save a new Contract
 exports.create = (req, res) => {
-  const { name = "" } = req.body;
-  // Validate request
-  if (!req.body.name) {
-    res.status(400).send({ message: "Name can not be empty!" });
+  const validate = createSchema.validate();
+
+  if (validate.error) {
+    const { message } = validate.error;
+    res.status(422).send({ message });
     return;
   }
 
   // Create a TypeFashion
   const typeFashion = new TypeFashion({
-    name,
+    ...req.body,
   });
 
   // Save Contract in the database
@@ -22,24 +26,20 @@ exports.create = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Contract.",
+        message: err.message || "Some error occurred while creating the Contract.",
       });
     });
 };
 
-
 exports.getAll = (req, res) => {
-// phanvanhoi.dtu@gmail.com
-// phanhoi1997
   TypeFashion.find()
     .then((data) => {
       res.send(data);
     })
     .catch((err) => {
       res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Contract.",
+        message: err.message || "Some error occurred while creating the Contract.",
       });
     });
 };
+

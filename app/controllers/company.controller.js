@@ -30,8 +30,6 @@ exports.create = (req, res) => {
 
 
 exports.getAll = (req, res) => {
-// phanvanhoi.dtu@gmail.com
-// phanhoi1997
   Company.find()
     .then((data) => {
       res.send(data);

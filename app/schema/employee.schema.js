@@ -2,10 +2,10 @@ const Joi = require("joi");
 
 const createSchema = Joi.object({
   name: Joi.string().required(),
-  role: Joi.string().required(),
   birthday: Joi.date(),
-  companyId: Joi.string().required(),
   sex: Joi.string().valid("nam", "nữ").required(),
+  roleId: Joi.string().required(),
+  companyId: Joi.string().required(),
 });
 
 const updateSchema = Joi.object({
