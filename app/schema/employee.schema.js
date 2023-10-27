@@ -11,7 +11,7 @@ const createSchema = Joi.object({
 const updateSchema = Joi.object({
   employeeId: Joi.string().required(),
   name: Joi.string().min(1),
-  role: Joi.string(),
+  roleId: Joi.string(),
   birthday: Joi.date(),
   companyId: Joi.string(),
   sex: Joi.string().valid("nam", "nữ"),
