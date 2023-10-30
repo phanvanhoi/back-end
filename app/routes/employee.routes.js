@@ -1,12 +1,6 @@
-module.exports = (app) => {
+module.exports = (app, router) => {
   const employees = require("../controllers/employee.controller.js");
 
-  const router = require("express").Router();
-  router.use((req, res, next) => {
-    console.log("Time: ", Date.now());
-    console.log("originalUrl: ", req.originalUrl);
-    next();
-  });
   // Create a new Tutorial
   router.get("/", employees.getAll);
   router.post("/create", employees.create);

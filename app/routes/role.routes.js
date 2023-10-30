@@ -1,13 +1,6 @@
-module.exports = (app) => {
+module.exports = (app, router) => {
   const roles = require("../controllers/role.controller.js");
 
-  const router = require("express").Router();
-  router.use((req, res, next) => {
-    console.log("Time: ", Date.now());
-    console.log("originalUrl: ", req.originalUrl);
-    next();
-  });
-  
   router.get("/", roles.getAll);
   router.post("/create", roles.create);
   router.post("/update-by-names", roles.updateByNames);
