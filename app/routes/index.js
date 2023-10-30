@@ -1,11 +1,13 @@
-const { logRequest } = require("../const/log-request.js");
-const router = require("express").Router();
-
 module.exports = (app) => {
-  logRequest(router);
-  require("./company.routes")(app, router);
-  require("./contract.routes")(app, router);
-  require("./employee.routes")(app, router);
-  require("./role.routes")(app, router);
-  require("./type-fashion.routes")(app, router);
+  require("./company.routes")(app);
+
+  require("./contract.routes")(app);
+
+  require("./employee.routes")(app);
+
+  require("./role.routes")(app);
+
+  require("./type-fashion.routes")(app);
+
+  require("./item.routes.js")(app);
 };

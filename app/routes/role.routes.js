@@ -1,5 +1,8 @@
-module.exports = (app, router) => {
+const { logRequest } = require("../const/log-request.js");
+module.exports = (app) => {
   const roles = require("../controllers/role.controller.js");
+  const router = require("express").Router();
+  logRequest(router);
 
   router.get("/", roles.getAll);
   router.post("/create", roles.create);
