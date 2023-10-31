@@ -4,8 +4,9 @@ module.exports = (app) => {
   const router = require("express").Router();
   logRequest(router);
   // Create a new Tutorial
-  router.get("/get-all", typeFashions.getAll);
-  router.post("/create", typeFashions.create);
+  router.get("/", typeFashions.getAll);
+  router.post("/", typeFashions.create);
+  router.put("/:id", typeFashions.updateById);
 
   app.use("/api/type-fashions", router);
 };

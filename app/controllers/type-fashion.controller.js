@@ -6,7 +6,7 @@ const { createSchema } = typeFashion;
 
 // Create and Save a new Contract
 exports.create = (req, res) => {
-  const validate = createSchema.validate();
+  const validate = createSchema.validate(req.body);
 
   if (validate.error) {
     const { message } = validate.error;
@@ -43,3 +43,21 @@ exports.getAll = (req, res) => {
     });
 };
 
+exports.updateById = (req, res) => {
+  const typeFashionId = req.params.id;
+
+  if (!typeFashionId) {
+    res.status(422).send({ message: "typeFashionId is require" });
+    return;
+  }
+
+  TypeFashion.findOneAndUpdate({ _id: typeFashionId }, req.body)
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};
