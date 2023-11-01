@@ -12,5 +12,7 @@ db.employee = require("./employee.model.js")(mongoose);
 db.role = require("./role.model.js")(mongoose);
 db.item = require("./item.model.js")(mongoose);
 db.typeFashion = require("./type-fashion.model.js")(mongoose);
+db.sign = require("./employees-contracts-sign.model.js")(mongoose);
+db.actual = require("./employees-contracts-actual.model.js")(mongoose);
 
 module.exports = db;

@@ -5,13 +5,14 @@ module.exports = (app) => {
   logRequest(router);
 
   // Create a new Tutorial
-  router.post("/create", contracts.create);
+  router.get("/", contracts.findAll);
+  router.post("/", contracts.create);
 
   // Download excell file
   router.get("/download-excel", contracts.downloadExcell);
 
   // Get all contract
-  router.get("/get-all-contracts", contracts.findAllContract);
+  // router.get("/get-all-contracts", contracts.findAllContract);
 
   app.use("/api/contracts", router);
 };

@@ -6,8 +6,8 @@ module.exports = (app) => {
 
   // Create a new Tutorial
   router.get("/", employees.getAll);
-  router.post("/create", employees.create);
-  router.put("/update/:id", employees.update);
+  router.post("/", employees.create);
+  router.put("/:id", employees.update);
 
   app.use("/api/employees", router);
 };

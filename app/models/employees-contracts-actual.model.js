@@ -4,12 +4,12 @@ module.exports = (mongoose) => {
   const schema = new mongoose.Schema(
     {
       id: ObjectId,
-      name: String,
-      birthday: Date,
-      sex: String,
-      roleId: ObjectId,
-      companyId: ObjectId,
+      employeeId: ObjectId,
       contractId: ObjectId,
+      itemId: ObjectId,
+      number: Number,
+      totalPrice: Number,
+      lock: Boolean,
     },
     { timestamps: true }
   );
@@ -20,6 +20,6 @@ module.exports = (mongoose) => {
     return object;
   });
 
-  const Company = mongoose.model("employee", schema);
-  return Company;
+  const EmployeesContractsActual = mongoose.model("employees-contracts-actual", schema);
+  return EmployeesContractsActual;
 };

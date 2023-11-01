@@ -1,6 +1,6 @@
 /** @format */
 const db = require("../models");
-const { employee: Employee, role: Role, company: Company, typeFashion: TypeFashion } = db;
+const { employee: Employee, role: Role, company: Company, typeFashion: TypeFashion, contract: Contract } = db;
 const { employeeSchema } = require("../schema/index");
 const { createSchema, updateSchema } = employeeSchema;
 
@@ -47,27 +47,28 @@ exports.create = async (req, res) => {
   }
 
   // Create a Employee
-  const { roleId, companyId } = req.body;
+  const { roleId, companyId, contractId } = req.body;
 
   try {
+    const hasCompany = await Company.findOne({ _id: companyId }).exec();
+    if (!hasCompany) {
+      res.status(422).send({ message: `"${companyId}" company have not in the system` });
+      return;
+    }
+
     const hasRole = await Role.findOne({ _id: roleId }).exec();
     if (!hasRole) {
       res.status(422).send({ message: `"${roleId}" role have not in the system ` });
       return;
     }
-  } catch (error) {
-    res.status(422).send({ message: `"${roleId}" role have not in the system ` });
-    return;
-  }
 
-  try {
-    const hasCompany = await Company.findOne({ _id: companyId }).exec();
-    if (!hasCompany) {
-      res.status(422).send({ message: `"${companyId}" have not in the system` });
+    const hasContract = await Contract.findOne({ _id: contractId }).exec();
+    if (!hasContract) {
+      res.status(422).send({ message: `"${contractId}" contract have not in the system ` });
       return;
     }
   } catch (error) {
-    res.status(422).send({ message: `"${companyId}" have not in the system` });
+    res.status(500).send({ message: `The system have some errors` });
     return;
   }
 

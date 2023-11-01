@@ -2,6 +2,19 @@ const db = require("../models");
 const ExcelJS = require("exceljs");
 const Contract = db.contract;
 
+// Find all published Contracts
+exports.findAll = (req, res) => {
+  Contract.find()
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      res?.status(500).send({
+        message: err.message || "Some error occurred while retrieving Contracts.",
+      });
+    });
+};
+
 // Create and Save a new Contract
 exports.create = (req, res) => {
   const { name = "", companyId = undefined } = req.body;
@@ -34,18 +47,6 @@ exports.create = (req, res) => {
     });
 };
 
-// Find all published Contracts
-exports.findAllContract = (req, res) => {
-  Contract.find()
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res?.status(500).send({
-        message: err.message || "Some error occurred while retrieving Contracts.",
-      });
-    });
-};
 
 exports.downloadExcell = (req, res) => {
   // Create a new workbook and worksheet
