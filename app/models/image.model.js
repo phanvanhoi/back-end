@@ -3,15 +3,8 @@ const { ObjectId } = require("mongodb");
 module.exports = (mongoose) => {
   const schema = new mongoose.Schema(
     {
-      id: ObjectId,
-      name: String,
-      phoneNumber: String,
-      Fax: String,
-      Tax: String,
-      bankNumber: String,
-      representPerson: String,
-      role: String,
-      image: Object,
+      fileName: String,
+      filePath: String,
     },
     { timestamps: true }
   );
@@ -22,6 +15,6 @@ module.exports = (mongoose) => {
     return object;
   });
 
-  const Company = mongoose.model("company", schema);
-  return Company;
+  const Image = mongoose.model("image", schema);
+  return Image;
 };

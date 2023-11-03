@@ -6,4 +6,5 @@ module.exports = (app) => {
   require("./type-fashion.routes")(app);
   require("./item.routes.js")(app);
   require("./employees-contracts-sign.routes")(app);
+  require("./upload.routes")(app);
 };

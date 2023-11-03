@@ -1,5 +1,5 @@
 const dbConfig = require("../config/db.config.js");
-
+const { GridFSBucket } = require("mongodb");
 const mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
 
@@ -14,5 +14,9 @@ db.item = require("./item.model.js")(mongoose);
 db.typeFashion = require("./type-fashion.model.js")(mongoose);
 db.sign = require("./employees-contracts-sign.model.js")(mongoose);
 db.actual = require("./employees-contracts-actual.model.js")(mongoose);
+db.image = require("./image.model.js")(mongoose);
+
+const bucket = new GridFSBucket(db.mongoose.connection, { bucketName: "images" });
+db.bucket = bucket;
 
 module.exports = db;

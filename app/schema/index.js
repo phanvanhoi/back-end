@@ -1,3 +1,4 @@
+const companySchema = require("./company.schema");
 const employeeSchema = require("./employee.schema");
 const roleSchema = require("./role.schema");
 const itemSchema = require("./item.schema");
@@ -12,4 +13,5 @@ module.exports = {
   typeFashion,
   signSchema,
   actualSchema,
+  companySchema,
 };

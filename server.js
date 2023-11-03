@@ -4,7 +4,7 @@ const cors = require("cors");
 const app = express();
 
 const corsOptions = {
-  origin: "http://localhost:8081",
+  origin: "http://localhost:5173",
 };
 
 app.use(cors(corsOptions));
@@ -35,6 +35,7 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/index")(app);
+
 
 process.on("SIGINT", async () => {
   try {
