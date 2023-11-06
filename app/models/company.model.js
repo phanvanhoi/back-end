@@ -5,6 +5,7 @@ module.exports = (mongoose) => {
     {
       id: ObjectId,
       name: String,
+      type: Number,
       phoneNumber: String,
       Fax: String,
       Tax: String,

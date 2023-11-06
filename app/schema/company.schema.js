@@ -11,7 +11,8 @@ const Joi = require("joi");
 // image: Binary,
 const createSchema = Joi.object({
   name: Joi.string().required(),
-  phoneNumber: Joi.string().regex(/^[0-9]{11}$/),
+  type: Joi.number().required(),
+  phoneNumber: Joi.string().regex(/^[0-9]{11}|[0-9]{10}$/),
   Fax: Joi.string(),
   Tax: Joi.string(),
   bankNumber: Joi.string(),
@@ -26,7 +27,8 @@ const createSchema = Joi.object({
 const updateSchema = Joi.object({
   id: Joi.string().required(),
   name: Joi.string(),
-  phoneNumber: Joi.string().regex(/^[0-9]{11}$/),
+  type: Joi.number(),
+  phoneNumber: Joi.string().regex(/^[0-9]{11}|[0-9]{10}$/),
   Fax: Joi.string(),
   Tax: Joi.string(),
   bankNumber: Joi.string(),
