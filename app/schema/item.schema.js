@@ -3,6 +3,7 @@ const Joi = require("joi");
 const createSchema = Joi.object({
   name: Joi.string().required(),
   price: Joi.number().required(),
+  columns: Joi.number().required(),
 });
 
 const updateSchema = Joi.object({});

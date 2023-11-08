@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-
+const fileUpload = require("express-fileupload");
 const app = express();
 
 const corsOptions = {
@@ -8,6 +8,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(fileUpload());
 
 // parse requests of content-type - application/json
 app.use(express.json());
@@ -35,7 +36,6 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/index")(app);
-
 
 process.on("SIGINT", async () => {
   try {

@@ -1,5 +1,5 @@
 const db = require("../models");
-const TypeFashion = db.typeFashion;
+const { typeFashion: TypeFashion, item: Item } = db;
 
 const { typeFashion } = require("../schema/index");
 const { createSchema } = typeFashion;
@@ -33,8 +33,20 @@ exports.create = (req, res) => {
 
 exports.getAll = (req, res) => {
   TypeFashion.find()
-    .then((data) => {
-      res.send(data);
+    .then(async (data) => {
+      const dataConvert = await Promise.all(
+        await data.map(async (value) => {
+          const doc = value._doc;
+          const itemIds = doc.items.split(",");
+          const items = await Item.find({ _id: { $in: itemIds } }).exec();
+          return {
+            ...doc,
+            items,
+          };
+        })
+      );
+
+      res.send(dataConvert);
     })
     .catch((err) => {
       res.status(500).send({
