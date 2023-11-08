@@ -5,7 +5,8 @@ module.exports = (app) => {
   logRequest(router);
 
   // Create a new Tutorial
-  router.get("/", employees.getAll);
+  router.get("/", employees.get);
+  router.get("/company/:id", employees.get);
   router.post("/", employees.create);
   router.put("/:id", employees.update);
 

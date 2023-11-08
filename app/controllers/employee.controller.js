@@ -4,8 +4,10 @@ const { employee: Employee, role: Role, company: Company, typeFashion: TypeFashi
 const { employeeSchema } = require("../schema/index");
 const { createSchema, updateSchema } = employeeSchema;
 
-exports.getAll = (req, res) => {
-  Employee.find()
+exports.get = (req, res) => {
+  const companyId = req.params.id;
+  const conditions = companyId ? { companyId } : {};
+  Employee.find(conditions)
     .then(async (data) => {
       const dataArr = data || [];
       const dataConvert = await Promise.all(
@@ -34,6 +36,36 @@ exports.getAll = (req, res) => {
         message: err.message || "Some error occurred while creating the Contract.",
       });
     });
+};
+
+exports.handdleManyEmployee = async (employees) => {
+  let result;
+  const employeeObjs = [];
+  await Promise.all(
+    employees.map(async (employee) => {
+      result = createSchema.validate(employee);
+      if (result.error) {
+        return result.error;
+      }
+      const { companyId = "", roleId = "" } = employee;
+      try {
+        const hasCompany = await Company.findOne({ _id: companyId }).exec();
+        if (!hasCompany) {
+          return `"${companyId}" company have not in the system`;
+        }
+
+        const hasRole = await Role.findOne({ _id: roleId }).exec();
+        if (!hasRole) {
+          return `"${roleId}" role have not in the system `;
+        }
+      } catch (error) {
+        return `The system have some errors`;
+      }
+      employeeObjs.push(new Employee(employee));
+    })
+  );
+
+  return Employee.insertMany(employeeObjs);
 };
 
 exports.create = async (req, res) => {

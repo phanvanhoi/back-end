@@ -9,7 +9,6 @@ module.exports = (mongoose) => {
       sex: String,
       roleId: ObjectId,
       companyId: ObjectId,
-      contractId: ObjectId,
     },
     { timestamps: true }
   );

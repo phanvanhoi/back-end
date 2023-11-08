@@ -6,7 +6,6 @@ const createSchema = Joi.object({
   sex: Joi.string().valid("nam", "nữ").required(),
   roleId: Joi.string().required(),
   companyId: Joi.string().required(),
-  contractId: Joi.string().required(),
 });
 
 const updateSchema = Joi.object({
@@ -15,7 +14,6 @@ const updateSchema = Joi.object({
   roleId: Joi.string(),
   birthday: Joi.date(),
   companyId: Joi.string(),
-  contractId: Joi.string(),
   sex: Joi.string().valid("nam", "nữ"),
 });
 

@@ -4,7 +4,10 @@ const { company: Company, image: Image } = db;
 const { companySchema } = require("../schema/index");
 const { createSchema, updateSchema } = companySchema;
 const { columnCharacters, getColumns } = require("../const/excel-column");
-const { typeFashion: TypeFashion, item: Item } = db;
+const { typeFashion: TypeFashion, item: Item, role: Role } = db;
+const moment = require("moment");
+
+const { handdleManyEmployee } = require("./employee.controller");
 
 // Create and Save a new Contract
 exports.create = (req, res) => {
@@ -92,8 +95,7 @@ exports.getAll = (req, res) => {
     });
 };
 
-exports.downloadExcell = async (req, res) => {
-  // Create a new workbook and worksheet
+const createHeaderExcell = async () => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("DS CHUẨN HĐ 1");
   const border = {
@@ -167,8 +169,15 @@ exports.downloadExcell = async (req, res) => {
   }
 
   worksheet.getRow(1).height = 40;
+  worksheet.getRow(1).border = border;
   worksheet.getRow(2).height = 60;
+  worksheet.getRow(2).border = border;
   worksheet.getRow(3).height = 80;
+  worksheet.getRow(3).border = border;
+  worksheet.getRows(4, 500).forEach((row) => {
+    row.height = 25;
+    row.border = border;
+  });
   //------------------End header--------------------
 
   const typeOfFashion = await TypeFashion.find()
@@ -205,6 +214,7 @@ exports.downloadExcell = async (req, res) => {
     getCell.border = border;
     getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
     getCell.value = value.name;
+    getCell.height = 100;
 
     getColumn.map((col, index) => {
       getCell = worksheet.getCell(col);
@@ -213,7 +223,13 @@ exports.downloadExcell = async (req, res) => {
       getCell.value = items[index].name;
     });
   });
+  return workbook;
+};
 
+exports.downloadExcell = async (req, res) => {
+  // Create a new workbook and worksheet
+
+  const workbook = await createHeaderExcell();
   // Set response headers
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader("Content-Disposition", 'attachment; filename="example.xlsx"');
@@ -224,26 +240,101 @@ exports.downloadExcell = async (req, res) => {
   });
 };
 
-exports.uploadExcel = (req, res) => {
+exports.uploadExcel = async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send("No files were uploaded.");
   }
 
-  const excelFile = req.files.excelFile;
+  const excelFile = req.files.file;
   const workbook = new ExcelJS.Workbook();
+  const companyId = req.params.id;
 
-  workbook.xlsx
+  try {
+    const hasCompany = await Company.findOne({ _id: companyId }).exec();
+    if (!hasCompany) {
+      res.status(422).send({ message: `"${companyId}" company have not in the system ` });
+      return;
+    }
+  } catch (error) {
+    res.status(422).send({ message: `"${companyId}" company have not in the system ` });
+    return;
+  }
+
+  await workbook.xlsx
     .load(excelFile.data)
-    .then(() => {
+    .then(async () => {
       const worksheet = workbook.getWorksheet(1);
+      const objectData = [];
+      await new Promise((resolve, reject) => {
+        worksheet.eachRow(async (row, rowNumber) => {
+          let dataEachRow = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
 
-      worksheet.eachRow((row, rowNumber) => {
-        row.eachCell((cell, colNumber) => {
-          console.log(`Cell ${colNumber} in Row ${rowNumber} has value: ${cell.value}`);
+          if (rowNumber >= 4) {
+            row.eachCell((cell, colNumber) => {
+              dataEachRow[colNumber] = cell.value;
+              console.log(`Cell ${colNumber} in Row ${rowNumber} has value: ${cell.value}`);
+            });
+
+            let dataObj = { companyId };
+            await Promise.all(
+              dataEachRow.map(async (value, index) => {
+                switch (index) {
+                  case 1:
+                    break;
+                  case 2:
+                    break;
+                  case 3:
+                    dataObj = { ...dataObj, name: value && value.trim() };
+                    break;
+                  case 4:
+                    break;
+                  case 5:
+                    const name = value && value.trim();
+                    const id = await Role.findOne({ name });
+                    if (!id) {
+                      res.status(402).send(`Role ${name} is not has in the system`);
+                    } else {
+                      const roleId = id._doc._id + "";
+                      dataObj = { ...dataObj, roleId };
+                    }
+
+                    break;
+                  case 6:
+                    const birthday = moment(value, "DD/MM/YYYY").toDate();
+                    if (birthday === "Invalid date") {
+                      res.status(402).send(`${value} invalid`);
+                    }
+                    dataObj = { ...dataObj, birthday };
+                    break;
+                  case 7:
+                    break;
+                  case 8:
+                    dataObj = { ...dataObj, sex: value && value.toLocaleLowerCase().trim() };
+                    break;
+                  case 9:
+                    break;
+
+                  default:
+                    break;
+                }
+              })
+            );
+
+            objectData.push(dataObj);
+            if (objectData.length + 3 === worksheet.actualRowCount) {
+              resolve(objectData);
+            }
+          }
         });
       });
 
-      res.status(200).send("Excel file uploaded and processed successfully.");
+      objectData.forEach((value) => {
+        console.log("objectData", JSON.stringify(value));
+      });
+
+      handdleManyEmployee(objectData).then((value) => {
+        res.status(200).send("Excel file uploaded and processed successfully.");
+      });
     })
     .catch((error) => {
       console.error("Error reading Excel file:", error);
