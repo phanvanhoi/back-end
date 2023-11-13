@@ -293,6 +293,7 @@ exports.uploadExcel = async (req, res) => {
                     const id = await Role.findOne({ name });
                     if (!id) {
                       res.status(402).send(`Role ${name} is not has in the system`);
+                      return;
                     } else {
                       const roleId = id._doc._id + "";
                       dataObj = { ...dataObj, roleId };
@@ -303,6 +304,7 @@ exports.uploadExcel = async (req, res) => {
                     const birthday = moment(value, "DD/MM/YYYY").toDate();
                     if (birthday === "Invalid date") {
                       res.status(402).send(`${value} invalid`);
+                      return;
                     }
                     dataObj = { ...dataObj, birthday };
                     break;

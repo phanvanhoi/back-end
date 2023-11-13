@@ -5,7 +5,7 @@ module.exports = (mongoose) => {
     {
       id: ObjectId,
       name: String,
-      price: Number,
+      typeFashionIds: String,
     },
     { timestamps: true }
   );
@@ -16,6 +16,6 @@ module.exports = (mongoose) => {
     return object;
   });
 
-  const Item = mongoose.model("item", schema);
-  return Item;
+  const TypeFashion = mongoose.model("set-type-fashion", schema);
+  return TypeFashion;
 };

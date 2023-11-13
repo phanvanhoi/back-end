@@ -3,7 +3,6 @@ const Joi = require("joi");
 const createSchema = Joi.object({
   name: Joi.string().required(),
   code: Joi.string().required(),
-  columns: Joi.string().required(),
   items: Joi.string().required(),
 });
 

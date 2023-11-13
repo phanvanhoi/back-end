@@ -13,7 +13,6 @@ exports.create = async (req, res) => {
     return;
   }
 
-
   // Create a Item
   const item = new Item({
     ...req.body,
@@ -33,6 +32,18 @@ exports.create = async (req, res) => {
 
 exports.getAll = (req, res) => {
   Item.find()
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};
+exports.deleteItem = (req, res) => {
+  const itemId = req.params.id;
+  Item.deleteOne({ _id: itemId })
     .then((data) => {
       res.send(data);
     })

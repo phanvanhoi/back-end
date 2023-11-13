@@ -6,6 +6,7 @@ module.exports = (app) => {
   // Create a new Tutorial
   router.get("/", typeFashions.getAll);
   router.post("/", typeFashions.create);
+  router.post("/delete", typeFashions.deleteFashioneType);
   router.put("/:id", typeFashions.updateById);
 
   app.use("/api/type-fashions", router);

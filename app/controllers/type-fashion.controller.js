@@ -55,6 +55,18 @@ exports.getAll = (req, res) => {
     });
 };
 
+exports.deleteFashioneType = (req, res) => {
+  TypeFashion.deleteOne(req.body)
+    .then(async (data) => {
+      res.send({ message: "Delete fashion type success" });
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};
+
 exports.updateById = (req, res) => {
   const typeFashionId = req.params.id;
 

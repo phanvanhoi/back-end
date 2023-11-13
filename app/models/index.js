@@ -15,6 +15,7 @@ db.typeFashion = require("./type-fashion.model.js")(mongoose);
 db.sign = require("./employees-contracts-sign.model.js")(mongoose);
 db.actual = require("./employees-contracts-actual.model.js")(mongoose);
 db.image = require("./image.model.js")(mongoose);
+db.setTypeFashion = require("./set-type-fashion.model.js")(mongoose);
 
 const bucket = new GridFSBucket(db.mongoose.connection, { bucketName: "images" });
 db.bucket = bucket;

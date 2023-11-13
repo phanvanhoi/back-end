@@ -5,6 +5,7 @@ module.exports = (app) => {
   logRequest(router);
   router.get("/", items.getAll);
   router.post("/", items.create);
+  router.delete("/:id", items.deleteItem);
 
   app.use("/api/items", router);
 };
