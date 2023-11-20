@@ -5,7 +5,7 @@ module.exports = (app) => {
   logRequest(router);
 
   router.get("/", roles.getAll);
-  router.post("/create", roles.create);
+  router.post("/", roles.create);
   router.post("/update-by-names", roles.updateByNames);
 
   app.use("/api/roles", router);

@@ -12,19 +12,12 @@ exports.get = (req, res) => {
       const dataArr = data || [];
       const dataConvert = await Promise.all(
         dataArr.map(async (data) => {
-          const { roleId, companyId } = data;
-          const roleObj = await Role.findOne({ _id: roleId }).exec();
-          let typeFashionObj = {};
-          if (roleObj) {
-            typeFashionObj = await TypeFashion.findOne({ _id: roleObj.typeFashionId }).exec();
-          }
+          const { companyId } = data;
 
           const companyObj = await Company.findOne({ _id: companyId }).exec();
           const dataObj = {
             ...data._doc,
-            roleName: roleObj.name,
             companyName: companyObj.name,
-            fashionType: typeFashionObj.name,
           };
           return dataObj;
         })
@@ -47,16 +40,11 @@ exports.handdleManyEmployee = async (employees) => {
       if (result.error) {
         return result.error;
       }
-      const { companyId = "", roleId = "" } = employee;
+      const { companyId = "" } = employee;
       try {
         const hasCompany = await Company.findOne({ _id: companyId }).exec();
         if (!hasCompany) {
           return `"${companyId}" company have not in the system`;
-        }
-
-        const hasRole = await Role.findOne({ _id: roleId }).exec();
-        if (!hasRole) {
-          return `"${roleId}" role have not in the system `;
         }
       } catch (error) {
         return `The system have some errors`;

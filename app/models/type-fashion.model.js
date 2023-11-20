@@ -7,6 +7,7 @@ module.exports = (mongoose) => {
       name: String,
       code: String,
       items: String,
+      roles: String,
     },
     { timestamps: true }
   );

@@ -7,8 +7,11 @@ module.exports = (mongoose) => {
       name: String,
       birthday: Date,
       sex: String,
-      roleId: ObjectId,
+      roleName: String,
       companyId: ObjectId,
+      numberPhone: String,
+      typeFashion: String,
+      items: Object,
     },
     { timestamps: true }
   );

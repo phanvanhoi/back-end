@@ -1,7 +1,7 @@
 const db = require("../models");
 const { company: Company, image: Image, setTypeFashion: SetTypeFashion } = db;
-const { companySchema } = require("../schema/index");
-const { createSchema, updateSchema } = companySchema;
+const { setTypeFashion } = require("../schema/index");
+const { createSchema } = setTypeFashion;
 const { columnCharacters, getColumns } = require("../const/excel-column");
 const { typeFashion: TypeFashion, item: Item, role: Role } = db;
 const moment = require("moment");
@@ -20,10 +20,28 @@ exports.create = (req, res) => {
   }
 
   // Create a Company
-  const company = new Company(req.body);
+  const setTypeFashion = new SetTypeFashion(req.body);
 
   // Save Contract in the database
-  Company.create(company)
+  SetTypeFashion.create(setTypeFashion)
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the fashion type.",
+      });
+    });
+};
+
+exports.updateById = (req, res) => {
+  const setTypeFashionId = req.params.id;
+  if (!setTypeFashionId) {
+    res.status(422).send({ message: "setTypeFashionId is require" });
+    return;
+  }
+
+  SetTypeFashion.findOneAndUpdate({ _id: setTypeFashionId }, req.body)
     .then((data) => {
       res.send(data);
     })
@@ -62,6 +80,58 @@ exports.getOne = (req, res) => {
         });
 
       res.send({ set: data, items: typeFashionObj });
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};
+
+exports.getAll = (req, res) => {
+  SetTypeFashion.find()
+    .then(async (data) => {
+      const result = await Promise.all(
+        data.map(async (obj) => {
+          const { typeFashionIds = "" } = obj;
+          const ids = typeFashionIds.split(",");
+
+          const typeFashionObj = await TypeFashion.find({ _id: { $in: ids } })
+            .then(async (data) => {
+              const dataConvert = await Promise.all(
+                await data.map(async (value) => {
+                  const doc = value._doc;
+                  const itemIds = doc.items.split(",");
+                  const items = await Item.find({ _id: { $in: itemIds } }).exec();
+                  return {
+                    ...doc,
+                    items,
+                  };
+                })
+              );
+
+              return dataConvert;
+            })
+            .catch((err) => {
+              return [];
+            });
+          return { set: obj, items: typeFashionObj };
+        })
+      );
+
+      res.send(result);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};
+
+exports.deleteSetFashioneType = (req, res) => {
+  SetTypeFashion.findOneAndDelete(req.body)
+    .then(async (data) => {
+      res.send({ message: "Delete fashion type success" });
     })
     .catch((err) => {
       res.status(500).send({

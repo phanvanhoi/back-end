@@ -3,30 +3,29 @@ const Role = db.role;
 const { roleSchema } = require("../schema/index");
 const { createSchema, updateByListIdSchema } = roleSchema;
 // Create and Save a new Contract
-exports.create = (req, res) => {
-  const validate = createSchema.validate(req.body);
-  // Validate request
-  if (validate.error) {
-    const { message } = validate.error;
-    res.status(422).send({ message });
-    return;
-  }
-
-  // Create a Role
-  const role = new Role({
-    ...req.body,
-  });
-
-  // Save Role in the database
-  Role.create(role)
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while creating the Contract.",
-      });
+exports.create = async (req, res) => {
+  if (Array.isArray(req.body)) {
+    const roles = [];
+    req.body.map((value) => {
+      const validate = createSchema.validate(value);
+      // Validate request
+      if (validate.error) {
+        const { message } = validate.error;
+        res.status(422).send({ message });
+        return;
+      }
+      roles.push(value);
     });
+
+    const result = await Promise.all(
+      roles.map(async (role) => {
+        return await Role.findOneAndUpdate({ name: role.name }, role, { upsert: true, new: true });
+      })
+    );
+    res.send(result);
+  } else {
+    res.send({ message: "Params must be a array" });
+  }
 };
 
 exports.getAll = (req, res) => {

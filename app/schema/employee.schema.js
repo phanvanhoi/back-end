@@ -4,16 +4,20 @@ const createSchema = Joi.object({
   name: Joi.string().required(),
   birthday: Joi.date(),
   sex: Joi.string().valid("nam", "nữ").required(),
-  roleId: Joi.string().required(),
+  roleName: Joi.string().required(),
   companyId: Joi.string().required(),
+  typeFashion: Joi.string().required(),
+  items: Joi.object().required(),
+  numberPhone: Joi.string().required(),
 });
 
 const updateSchema = Joi.object({
   employeeId: Joi.string().required(),
   name: Joi.string().min(1),
-  roleId: Joi.string(),
+  roleName: Joi.string(),
   birthday: Joi.date(),
   companyId: Joi.string(),
+  numberPhone: Joi.string(),
   sex: Joi.string().valid("nam", "nữ"),
 });
 

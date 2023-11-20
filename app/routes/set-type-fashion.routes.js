@@ -5,6 +5,10 @@ module.exports = (app) => {
   logRequest(router);
   // Create a new Tutorial
   router.get("/:id", setTypeFashions.getOne);
+  router.put("/:id", setTypeFashions.updateById);
+  router.get("/", setTypeFashions.getAll);
+  router.post("/", setTypeFashions.create);
+  router.post("/delete", setTypeFashions.deleteSetFashioneType);
 
   app.use("/api/set-type-fashions", router);
 };

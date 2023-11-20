@@ -5,6 +5,7 @@ const itemSchema = require("./item.schema");
 const typeFashion = require("./type-fashion.schema");
 const signSchema = require("./employees-contracts-sign.schema");
 const actualSchema = require("./employees-contracts-actual.schema");
+const setTypeFashion = require("./set-type-fashion.schema");
 
 module.exports = {
   employeeSchema,
@@ -14,4 +15,5 @@ module.exports = {
   signSchema,
   actualSchema,
   companySchema,
+  setTypeFashion
 };

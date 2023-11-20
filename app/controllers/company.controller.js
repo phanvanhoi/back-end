@@ -4,7 +4,7 @@ const { company: Company, image: Image } = db;
 const { companySchema } = require("../schema/index");
 const { createSchema, updateSchema } = companySchema;
 const { columnCharacters, getColumns } = require("../const/excel-column");
-const { typeFashion: TypeFashion, item: Item, role: Role } = db;
+const { typeFashion: TypeFashion, item: Item, role: Role, setTypeFashion: SetTypeFashion, contract: Contract } = db;
 const moment = require("moment");
 
 const { handdleManyEmployee } = require("./employee.controller");
@@ -95,7 +95,13 @@ exports.getAll = (req, res) => {
     });
 };
 
-const createHeaderExcell = async () => {
+const getSetOfFashionByContract = async (constractId) => {
+  const data = await Contract.findOne({ _id: "6538d0eb247ff3058fea29dd" });
+  const setOfFashion = await SetTypeFashion.findOne({ _id: data._doc.setTypeFashion });
+  return setOfFashion || {};
+};
+
+const createHeaderExcell = async (constractId) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("DS CHUẨN HĐ 1");
   const border = {
@@ -106,10 +112,6 @@ const createHeaderExcell = async () => {
   };
 
   const header = [
-    {
-      column: "A1:BC1",
-      value: "DANH SÁCH CBCNV MAY ĐỒNG PHỤC - 2023",
-    },
     {
       column: "A2:A3",
       value: "STT",
@@ -124,23 +126,23 @@ const createHeaderExcell = async () => {
     },
     {
       column: "D2:D3",
-      value: "Khối",
+      value: "Điện thoại",
     },
     {
       column: "E2:E3",
-      value: "Chức danh",
+      value: "Năm sinh",
     },
     {
       column: "F2:F3",
-      value: "Ngày tháng năm sinh",
+      value: "Giới tính",
     },
     {
       column: "G2:G3",
-      value: "Loại đp",
+      value: "Đơn vị công tác",
     },
     {
       column: "H2:H3",
-      value: "Giới tính",
+      value: "Loại ĐP",
     },
   ];
 
@@ -153,15 +155,6 @@ const createHeaderExcell = async () => {
     getCell.border = border;
     getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
     getCell.value = value.value;
-    if (index === 0) {
-      getCell.font = {
-        name: "Times New Roman",
-        family: 2,
-        size: 20,
-        italic: true,
-        bold: true,
-      };
-    }
   });
 
   for (let index = 9; index <= 57; index++) {
@@ -180,31 +173,14 @@ const createHeaderExcell = async () => {
   });
   //------------------End header--------------------
 
-  const typeOfFashion = await TypeFashion.find()
-    .then(async (data) => {
-      const dataConvert = await Promise.all(
-        await data.map(async (value) => {
-          const doc = value._doc;
-          const itemIds = doc.items.split(",");
-          let items = await Item.find({ _id: { $in: itemIds } }).exec();
-          items = items.map((e) => e._doc);
-          return {
-            ...doc,
-            items,
-          };
-        })
-      );
-
-      return dataConvert;
-    })
-    .catch((err) => {
-      return [];
-    });
-
+  const typeOfFashion = await getSetOfFashionByContract();
+  const typeOfFashionItems = typeOfFashion.items;
   let rootColumn = 9;
-  typeOfFashion.map((value) => {
-    const items = value.items;
+  let lengthSetFashion = 0;
+  for (let properties in typeOfFashionItems) {
+    const items = Object.keys(typeOfFashionItems[properties].items);
     const length = items.length;
+    lengthSetFashion += length;
     const getColumnRange = getColumns(rootColumn, rootColumn + length, 2);
     const getColumn = getColumns(rootColumn, rootColumn + length, 3);
     rootColumn = rootColumn + length;
@@ -213,23 +189,45 @@ const createHeaderExcell = async () => {
     getCell = worksheet.getCell(getColumnRange[0]);
     getCell.border = border;
     getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
-    getCell.value = value.name;
+    getCell.value = properties;
     getCell.height = 100;
 
     getColumn.map((col, index) => {
       getCell = worksheet.getCell(col);
       getCell.border = border;
       getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true, textRotation: 90 };
-      getCell.value = items[index].name;
+      getCell.value = items[index];
     });
-  });
+  }
+
+  const title = {
+    column: getColumns(1, rootColumn + 2, 1),
+    value: typeOfFashion.name,
+  };
+
+  const rangeHeader = `${title.column[0]}:${title.column[title.column.length - 1]}`;
+
+  worksheet.mergeCells(rangeHeader);
+  getCell = worksheet.getCell(title.column[0]);
+  getCell.border = border;
+  getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  getCell.value = title.value;
+  getCell.font = {
+    name: "Times New Roman",
+    family: 2,
+    size: 20,
+    italic: true,
+    bold: true,
+  };
+
   return workbook;
 };
 
 exports.downloadExcell = async (req, res) => {
   // Create a new workbook and worksheet
+  const contractId = "6538d0eb247ff3058fea29dd"; //
 
-  const workbook = await createHeaderExcell();
+  const workbook = await createHeaderExcell(req, res, contractId);
   // Set response headers
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader("Content-Disposition", 'attachment; filename="example.xlsx"');
@@ -240,6 +238,15 @@ exports.downloadExcell = async (req, res) => {
   });
 };
 
+const checkRoleAndGetitems = (typeFashtion, roleName) => {
+  for (let properties in typeFashtion) {
+    if (typeFashtion[properties].roles.includes(roleName))
+      return {
+        properties,
+        value: typeFashtion[properties],
+      };
+  }
+};
 exports.uploadExcel = async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send("No files were uploaded.");
@@ -260,78 +267,79 @@ exports.uploadExcel = async (req, res) => {
     return;
   }
 
+  const typeOfFashion = (await getSetOfFashionByContract()).items;
+
   await workbook.xlsx
     .load(excelFile.data)
     .then(async () => {
       const worksheet = workbook.getWorksheet(1);
       const objectData = [];
+
+      if (worksheet.actualRowCount < 4) {
+        res.status(402).send({ message: "Chưa có nhân viên nào được thêm vào" });
+      }
       await new Promise((resolve, reject) => {
         worksheet.eachRow(async (row, rowNumber) => {
           let dataEachRow = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
-
+          console.log("rowNumber", rowNumber);
           if (rowNumber >= 4) {
-            row.eachCell((cell, colNumber) => {
-              dataEachRow[colNumber] = cell.value;
-              console.log(`Cell ${colNumber} in Row ${rowNumber} has value: ${cell.value}`);
-            });
+            try {
+              console.log("rowNumber >= 4");
+              row.eachCell((cell, colNumber) => {
+                dataEachRow[colNumber] = cell.value;
+                console.log(`Cell ${colNumber} in Row ${rowNumber} has value: ${cell.value}`);
+              });
 
-            let dataObj = { companyId };
-            await Promise.all(
-              dataEachRow.map(async (value, index) => {
-                switch (index) {
-                  case 1:
-                    break;
-                  case 2:
-                    break;
-                  case 3:
-                    dataObj = { ...dataObj, name: value && value.trim() };
-                    break;
-                  case 4:
-                    break;
-                  case 5:
-                    const name = value && value.trim();
-                    const id = await Role.findOne({ name });
-                    if (!id) {
-                      res.status(402).send(`Role ${name} is not has in the system`);
-                      return;
-                    } else {
-                      const roleId = id._doc._id + "";
-                      dataObj = { ...dataObj, roleId };
-                    }
+              let dataObj = { companyId };
+              await Promise.all(
+                dataEachRow.map(async (value, index) => {
+                  switch (index) {
+                    case 1:
+                      break;
+                    case 2:
+                      break;
+                    case 3:
+                      dataObj = { ...dataObj, name: value && value.trim() };
+                      break;
+                    case 4:
+                      dataObj = { ...dataObj, numberPhone: value && value.trim() };
+                      break;
+                    case 5:
+                      const birthday = moment(value, "DD/MM/YYYY").toDate();
+                      if (birthday === "Invalid date") {
+                        res.status(402).send(`${value} invalid`);
+                        return;
+                      }
+                      dataObj = { ...dataObj, birthday };
+                      break;
+                    case 6:
+                      dataObj = { ...dataObj, sex: value && value.toLocaleLowerCase().trim() };
+                      break;
+                    case 7:
+                      const roleName = value && value.trim();
+                      const items = checkRoleAndGetitems(typeOfFashion, roleName);
+                      dataObj = { ...dataObj, roleName, typeFashion: items.properties, items: { contract: items?.value ? items?.value.items : {} } };
+                      break;
+                    case 8:
+                      break;
+                    case 9:
+                      break;
 
-                    break;
-                  case 6:
-                    const birthday = moment(value, "DD/MM/YYYY").toDate();
-                    if (birthday === "Invalid date") {
-                      res.status(402).send(`${value} invalid`);
-                      return;
-                    }
-                    dataObj = { ...dataObj, birthday };
-                    break;
-                  case 7:
-                    break;
-                  case 8:
-                    dataObj = { ...dataObj, sex: value && value.toLocaleLowerCase().trim() };
-                    break;
-                  case 9:
-                    break;
+                    default:
+                      break;
+                  }
+                })
+              );
 
-                  default:
-                    break;
-                }
-              })
-            );
-
-            objectData.push(dataObj);
-            if (objectData.length + 3 === worksheet.actualRowCount) {
-              resolve(objectData);
+              objectData.push(dataObj);
+              if (objectData.length + 3 === worksheet.actualRowCount) {
+                resolve(objectData);
+              }
+            } catch (error) {
+              console.log("error", error);
             }
           }
         });
-      });
-
-      objectData.forEach((value) => {
-        console.log("objectData", JSON.stringify(value));
       });
 
       handdleManyEmployee(objectData).then((value) => {

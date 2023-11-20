@@ -55,8 +55,30 @@ exports.getAll = (req, res) => {
     });
 };
 
+exports.getOptions = (req, res) => {
+  TypeFashion.find()
+    .then(async (data) => {
+      const dataConvert = await Promise.all(
+        await data.map(async (value) => {
+          const doc = value._doc;
+          return {
+            label: doc.name,
+            value: doc._id,
+          };
+        })
+      );
+
+      res.send(dataConvert);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};
+
 exports.deleteFashioneType = (req, res) => {
-  TypeFashion.deleteOne(req.body)
+  TypeFashion.findOneAndDelete(req.body)
     .then(async (data) => {
       res.send({ message: "Delete fashion type success" });
     })
