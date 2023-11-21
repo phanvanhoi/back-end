@@ -7,8 +7,8 @@ const createSchema = Joi.object({
   roleName: Joi.string().required(),
   companyId: Joi.string().required(),
   typeFashion: Joi.string().required(),
-  items: Joi.object().required(),
   numberPhone: Joi.string().required(),
+  
 });
 
 const updateSchema = Joi.object({

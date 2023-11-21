@@ -1,11 +1,13 @@
+const url = require("url");
 const ExcelJS = require("exceljs");
 const db = require("../models");
-const { company: Company, image: Image } = db;
+const { company: Company, image: Image, employee: Employee } = db;
 const { companySchema } = require("../schema/index");
 const { createSchema, updateSchema } = companySchema;
 const { columnCharacters, getColumns } = require("../const/excel-column");
 const { typeFashion: TypeFashion, item: Item, role: Role, setTypeFashion: SetTypeFashion, contract: Contract } = db;
 const moment = require("moment");
+const dayjs = require("dayjs");
 
 const { handdleManyEmployee } = require("./employee.controller");
 
@@ -95,13 +97,12 @@ exports.getAll = (req, res) => {
     });
 };
 
-const getSetOfFashionByContract = async (constractId) => {
-  const data = await Contract.findOne({ _id: "6538d0eb247ff3058fea29dd" });
-  const setOfFashion = await SetTypeFashion.findOne({ _id: data._doc.setTypeFashion });
+const getSetOfFashionByContract = async (setTypeFashionName) => {
+  const setOfFashion = await SetTypeFashion.findOne({ name: setTypeFashionName });
   return setOfFashion || {};
 };
 
-const createHeaderExcell = async (constractId) => {
+const createHeaderExcell = async (setTypeFashionName) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("DS CHUẨN HĐ 1");
   const border = {
@@ -173,12 +174,17 @@ const createHeaderExcell = async (constractId) => {
   });
   //------------------End header--------------------
 
-  const typeOfFashion = await getSetOfFashionByContract();
+  const typeOfFashion = await getSetOfFashionByContract(setTypeFashionName);
   const typeOfFashionItems = typeOfFashion.items;
+
+  if (!typeOfFashion.items) {
+    return null;
+  }
+
   let rootColumn = 9;
   let lengthSetFashion = 0;
   for (let properties in typeOfFashionItems) {
-    const items = Object.keys(typeOfFashionItems[properties].items);
+    const items = Object.keys(typeOfFashionItems[properties].items || {});
     const length = items.length;
     lengthSetFashion += length;
     const getColumnRange = getColumns(rootColumn, rootColumn + length, 2);
@@ -225,17 +231,22 @@ const createHeaderExcell = async (constractId) => {
 
 exports.downloadExcell = async (req, res) => {
   // Create a new workbook and worksheet
-  const contractId = "6538d0eb247ff3058fea29dd"; //
+  const urlParts = url.parse(req.url, true);
+  const { setTypeFashionName = "" } = urlParts.query;
 
-  const workbook = await createHeaderExcell(req, res, contractId);
-  // Set response headers
-  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.setHeader("Content-Disposition", 'attachment; filename="example.xlsx"');
+  const workbook = await createHeaderExcell(setTypeFashionName);
+  if (workbook === null) {
+    res.status(422).send({ message: `Bạn chưa thiết lập chức danh` });
+  } else {
+    // Set response headers
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", 'attachment; filename="example.xlsx"');
 
-  // Send the workbook as a response
-  workbook.xlsx.write(res).then(() => {
-    res.end();
-  });
+    // Send the workbook as a response
+    workbook.xlsx.write(res).then(() => {
+      res.end();
+    });
+  }
 };
 
 const checkRoleAndGetitems = (typeFashtion, roleName) => {
@@ -278,16 +289,17 @@ exports.uploadExcel = async (req, res) => {
       if (worksheet.actualRowCount < 4) {
         res.status(402).send({ message: "Chưa có nhân viên nào được thêm vào" });
       }
+
+      const urlParts = url.parse(req.url, true);
+      const { nameContract = "" } = urlParts.query;
+
       await new Promise((resolve, reject) => {
         worksheet.eachRow(async (row, rowNumber) => {
           let dataEachRow = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
-          console.log("rowNumber", rowNumber);
           if (rowNumber >= 4) {
             try {
-              console.log("rowNumber >= 4");
               row.eachCell((cell, colNumber) => {
                 dataEachRow[colNumber] = cell.value;
-                console.log(`Cell ${colNumber} in Row ${rowNumber} has value: ${cell.value}`);
               });
 
               let dataObj = { companyId };
@@ -299,10 +311,10 @@ exports.uploadExcel = async (req, res) => {
                     case 2:
                       break;
                     case 3:
-                      dataObj = { ...dataObj, name: value && value.trim() };
+                      dataObj = { ...dataObj, name: value && (value + "").trim() };
                       break;
                     case 4:
-                      dataObj = { ...dataObj, numberPhone: value && value.trim() };
+                      dataObj = { ...dataObj, numberPhone: value && (value + "").trim() };
                       break;
                     case 5:
                       const birthday = moment(value, "DD/MM/YYYY").toDate();
@@ -316,9 +328,16 @@ exports.uploadExcel = async (req, res) => {
                       dataObj = { ...dataObj, sex: value && value.toLocaleLowerCase().trim() };
                       break;
                     case 7:
-                      const roleName = value && value.trim();
+                      const roleName = value && (value + "").trim();
                       const items = checkRoleAndGetitems(typeOfFashion, roleName);
-                      dataObj = { ...dataObj, roleName, typeFashion: items.properties, items: { contract: items?.value ? items?.value.items : {} } };
+                      dataObj = {
+                        ...dataObj,
+                        roleName,
+                        typeFashion: items?.properties,
+                        items: {
+                          [nameContract]: { contract: items?.value ? items?.value.items : {}, createAt: dayjs().unix() },
+                        },
+                      };
                       break;
                     case 8:
                       break;
@@ -350,4 +369,44 @@ exports.uploadExcel = async (req, res) => {
       console.error("Error reading Excel file:", error);
       res.status(500).send("Error reading Excel file.");
     });
+};
+
+exports.getOptionsFromEmployeeByCompanyAndContract = async (req, res) => {
+  const companyId = req.params.id;
+
+  try {
+    const hasCompany = await Company.findOne({ _id: companyId }).exec();
+    if (!hasCompany) {
+      res.status(422).send({ message: `"${companyId}" company have not in the system` });
+      return;
+    }
+
+    const employees = await Employee.find({ companyId: companyId });
+
+    const options = employees
+      .map((e) => {
+        const items = e._doc.items;
+        const setTypeFashion = [];
+        if (typeof items === "object") {
+          for (let item in items) {
+            setTypeFashion.push(item);
+          }
+        }
+        return setTypeFashion;
+      })
+      .flat();
+                        
+    const distinctOptions = [...new Set(options)];
+    const result = distinctOptions.map((e) => {
+      return {
+        lable: e,
+        value: e,
+      };
+    });
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send({
+      message: error.message || "Some error occurred while creating the Contract.",
+    });
+  }
 };

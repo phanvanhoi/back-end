@@ -11,9 +11,9 @@ module.exports = (mongoose) => {
       companyId: ObjectId,
       numberPhone: String,
       typeFashion: String,
-      items: Object,
     },
-    { timestamps: true }
+    { timestamps: true },
+    { strict: false }
   );
 
   schema.method("toJSON", function () {
@@ -22,6 +22,6 @@ module.exports = (mongoose) => {
     return object;
   });
 
-  const Company = mongoose.model("employee", schema);
-  return Company;
+  const Employee = mongoose.model("employee", schema);
+  return Employee;
 };

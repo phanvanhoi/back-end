@@ -5,13 +5,7 @@ module.exports = (mongoose) => {
     {
       id: ObjectId,
       name: String,
-      type: Number,
-      phoneNumber: String,
-      Fax: String,
-      Tax: String,
-      bankNumber: String,
-      representPerson: String,
-      role: String,
+      type: String,
       image: Object,
     },
     { timestamps: true }

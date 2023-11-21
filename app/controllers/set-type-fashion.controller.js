@@ -139,3 +139,24 @@ exports.deleteSetFashioneType = (req, res) => {
       });
     });
 };
+
+exports.getOptions = (req, res) => {
+  SetTypeFashion.find()
+    .then(async (data) => {
+      const result = await Promise.all(
+        data.map(async (obj) => {
+          return {
+            value: obj.name,
+            label: obj.name,
+          };
+        })
+      );
+
+      res.send(result);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};

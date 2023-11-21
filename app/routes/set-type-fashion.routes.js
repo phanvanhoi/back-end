@@ -9,6 +9,7 @@ module.exports = (app) => {
   router.get("/", setTypeFashions.getAll);
   router.post("/", setTypeFashions.create);
   router.post("/delete", setTypeFashions.deleteSetFashioneType);
+  router.get("/options/1", setTypeFashions.getOptions);
 
   app.use("/api/set-type-fashions", router);
 };

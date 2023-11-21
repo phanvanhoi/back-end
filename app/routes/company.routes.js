@@ -14,6 +14,7 @@ module.exports = (app) => {
   router.post("/upload/:id", companys.uploadExcel);
   router.post("/", companys.create);
   router.put("/:id", companys.updateById);
+  router.get("/set-type-fashions/option/:id", companys.getOptionsFromEmployeeByCompanyAndContract);
 
   app.use("/api/companys", router);
 };

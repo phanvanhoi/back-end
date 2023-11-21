@@ -1,13 +1,84 @@
 /** @format */
+const dayjs = require("dayjs");
 const db = require("../models");
 const { employee: Employee, role: Role, company: Company, typeFashion: TypeFashion, contract: Contract } = db;
 const { employeeSchema } = require("../schema/index");
 const { createSchema, updateSchema } = employeeSchema;
+const url = require("url");
 
-exports.get = (req, res) => {
+const getversionName = async (companyId) => {
+  let result = [];
+  const hasCompany = await Company.findOne({ _id: companyId }).exec();
+  if (!hasCompany) {
+    res.status(422).send({ message: `"${companyId}" company have not in the system` });
+    return result;
+  }
+
+  const employees = await Employee.find({ companyId: companyId });
+
+  const options = employees
+    .map((e) => {
+      const items = e._doc.items;
+      const setTypeFashion = [];
+      if (typeof items === "object") {
+        for (let item in items) {
+          setTypeFashion.push(item);
+        }
+      }
+      return setTypeFashion;
+    })
+    .flat();
+
+  result = [...new Set(options)];
+  return result;
+};
+exports.get = async (req, res) => {
   const companyId = req.params.id;
-  const conditions = companyId ? { companyId } : {};
-  Employee.find(conditions)
+  const urlParts = url.parse(req.url, true);
+  const { year = "", versionName = "" } = urlParts.query;
+  let conditions = companyId ? [{ companyId }] : [];
+  let listVersionName = [];
+  if (!versionName) {
+    if (year) {
+      listVersionName = await getversionName(companyId);
+      const start = dayjs(`1-1-${year} 12:00:00 AM`).unix();
+      const end = dayjs(`12-30-${year} 12:59:59 PM`).unix();
+
+      const orCheck = [];
+      listVersionName.forEach((e) => {
+        orCheck.push({
+          ["items." + e + ".createAt"]: { $gte: start, $lte: end },
+        });
+      });
+      conditions = [
+        ...conditions,
+        {
+          $or: orCheck,
+        },
+      ];
+    }
+  } else {
+    if (year) {
+      const start = dayjs(`1-1-${year} 12:00:00 AM`).unix();
+      const end = dayjs(`12-30-${year} 12:59:59 PM`).unix();
+
+      conditions = [
+        ...conditions,
+        {
+          ["items." + versionName + ".createAt"]: { $gte: start, $lte: end },
+        },
+      ];
+    } else {
+      conditions = [
+        ...conditions,
+        {
+          ["items." + versionName]: { $exists: true },
+        },
+      ];
+    }
+  }
+
+  Employee.find({ $and: conditions })
     .then(async (data) => {
       const dataArr = data || [];
       const dataConvert = await Promise.all(
@@ -32,14 +103,8 @@ exports.get = (req, res) => {
 };
 
 exports.handdleManyEmployee = async (employees) => {
-  let result;
-  const employeeObjs = [];
   await Promise.all(
     employees.map(async (employee) => {
-      result = createSchema.validate(employee);
-      if (result.error) {
-        return result.error;
-      }
       const { companyId = "" } = employee;
       try {
         const hasCompany = await Company.findOne({ _id: companyId }).exec();
@@ -49,11 +114,12 @@ exports.handdleManyEmployee = async (employees) => {
       } catch (error) {
         return `The system have some errors`;
       }
-      employeeObjs.push(new Employee(employee));
+
+      await Employee.findOneAndUpdate({ name: employee.name }, employee, { upsert: true, new: true, strict: false });
     })
   );
 
-  return Employee.insertMany(employeeObjs);
+  return "ok";
 };
 
 exports.create = async (req, res) => {
