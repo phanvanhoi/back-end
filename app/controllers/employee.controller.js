@@ -120,6 +120,7 @@ exports.handdleManyEmployee = async (employees) => {
   await Promise.all(
     employees.map(async (employee) => {
       const { companyId = "" } = employee;
+      let employeeOject = employee;
       try {
         const hasCompany = await Company.findOne({ _id: companyId }).exec();
         if (!hasCompany) {
@@ -129,7 +130,19 @@ exports.handdleManyEmployee = async (employees) => {
         return `The system have some errors`;
       }
 
-      await Employee.findOneAndUpdate({ name: employee.name }, employee, { upsert: true, new: true, strict: false });
+      const condition = { name: employee.name, companyId };
+      const employeeInstance = (await Employee.findOne(condition)) || { _doc: "" };
+      if (employeeInstance) {
+        employeeOject = {
+          ...employeeOject,
+          items: {
+            ...employeeOject.items,
+            ...employeeInstance._doc.items,
+          },
+        };
+      }
+
+      await Employee.findOneAndUpdate({ name: employee.name, companyId }, employeeOject, { upsert: true, new: true, strict: false });
     })
   );
 
