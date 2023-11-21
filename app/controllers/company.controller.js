@@ -263,6 +263,9 @@ exports.uploadExcel = async (req, res) => {
     return res.status(400).send("No files were uploaded.");
   }
 
+  const urlParts = url.parse(req.url, true);
+  const { nameContract = "" } = urlParts.query;
+
   const excelFile = req.files.file;
   const workbook = new ExcelJS.Workbook();
   const companyId = req.params.id;
@@ -278,7 +281,7 @@ exports.uploadExcel = async (req, res) => {
     return;
   }
 
-  const typeOfFashion = (await getSetOfFashionByContract()).items;
+  const typeOfFashion = (await getSetOfFashionByContract(nameContract)).items;
 
   await workbook.xlsx
     .load(excelFile.data)
@@ -395,7 +398,7 @@ exports.getOptionsFromEmployeeByCompanyAndContract = async (req, res) => {
         return setTypeFashion;
       })
       .flat();
-                        
+
     const distinctOptions = [...new Set(options)];
     const result = distinctOptions.map((e) => {
       return {

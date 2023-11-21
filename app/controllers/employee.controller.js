@@ -41,21 +41,23 @@ exports.get = async (req, res) => {
   if (!versionName) {
     if (year) {
       listVersionName = await getversionName(companyId);
-      const start = dayjs(`1-1-${year} 12:00:00 AM`).unix();
-      const end = dayjs(`12-30-${year} 12:59:59 PM`).unix();
+      if (listVersionName.length > 0) {
+        const start = dayjs(`1-1-${year} 12:00:00 AM`).unix();
+        const end = dayjs(`12-30-${year} 12:59:59 PM`).unix();
 
-      const orCheck = [];
-      listVersionName.forEach((e) => {
-        orCheck.push({
-          ["items." + e + ".createAt"]: { $gte: start, $lte: end },
+        const orCheck = [];
+        listVersionName.forEach((e) => {
+          orCheck.push({
+            ["items." + e + ".createAt"]: { $gte: start, $lte: end },
+          });
         });
-      });
-      conditions = [
-        ...conditions,
-        {
-          $or: orCheck,
-        },
-      ];
+        conditions = [
+          ...conditions,
+          {
+            $or: orCheck,
+          },
+        ];
+      }
     }
   } else {
     if (year) {
@@ -84,11 +86,23 @@ exports.get = async (req, res) => {
       const dataConvert = await Promise.all(
         dataArr.map(async (data) => {
           const { companyId } = data;
+          const items = data._doc.items;
+          // const versionList = [];
+          // if (typeof items === "object") {
+          //   if (versionName) {
+          //     versionList.push(items[versionName].contract);
+          //   } else {
+          //     for (let properties in items) {
+          //       versionList.push(items[properties].contract);
+          //     }
+          //   }
+          // }
 
-          const companyObj = await Company.findOne({ _id: companyId }).exec();
+          // const companyObj = await Company.findOne({ _id: companyId }).exec();
           const dataObj = {
             ...data._doc,
-            companyName: companyObj.name,
+            items: items[versionName].contract,
+            typeFashion: data._doc.typeFashion,
           };
           return dataObj;
         })
