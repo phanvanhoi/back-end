@@ -258,6 +258,11 @@ const checkRoleAndGetitems = (typeFashtion, roleName) => {
       };
   }
 };
+
+function capitalize(s) {
+  return s && s[0].toUpperCase() + s.slice(1);
+}
+
 exports.uploadExcel = async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send("No files were uploaded.");
@@ -333,12 +338,32 @@ exports.uploadExcel = async (req, res) => {
                     case 7:
                       const roleName = value && (value + "").trim();
                       const items = checkRoleAndGetitems(typeOfFashion, roleName);
+                      const info = items?.value;
+                      let contract = {};
+                      let typeFashion = items?.properties;
+                      if (info) {
+                        const types = info.type;
+                        if (types) {
+                          const sexEmP = dataObj.sex || "nam";
+                          const itemClone = JSON.parse(JSON.stringify(info.items));
+
+                          for (let properties in types) {
+                            if (types[properties] !== sexEmP) {
+                              delete itemClone[properties];
+                            }
+                          }
+                          contract = itemClone;
+                          typeFashion = capitalize(sexEmP) + " " + typeFashion;
+                        } else {
+                          contract = info.items;
+                        }
+                      }
                       dataObj = {
                         ...dataObj,
                         roleName,
-                        typeFashion: items?.properties,
+                        typeFashion,
                         items: {
-                          [nameContract]: { contract: items?.value ? items?.value.items : {}, createAt: dayjs().unix() },
+                          [nameContract]: { contract, createAt: dayjs().unix() },
                         },
                       };
                       break;

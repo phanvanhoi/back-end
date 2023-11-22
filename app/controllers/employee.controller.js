@@ -136,8 +136,8 @@ exports.handdleManyEmployee = async (employees) => {
         employeeOject = {
           ...employeeOject,
           items: {
-            ...employeeOject.items,
             ...employeeInstance._doc.items,
+            ...employeeOject.items,
           },
         };
       }
