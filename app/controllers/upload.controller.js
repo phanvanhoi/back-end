@@ -18,26 +18,21 @@ exports.getResource = (req, res) => {
 };
 
 exports.upload = (req, res) => {
-  const { path, originalname = "" } = req.file;
-
-  // Read the binary file
-  const fileData = fs.readFileSync(path);
+  const { data, name = "" } = req?.files?.image;
 
   // Generate a new filename with the appropriate extension (assuming the original file had an extension)
-  const extension = originalname.split(".").pop();
+  const extension = name.split(".").pop();
   const newFilename = `${Date.now()}.${extension}`;
 
   // Specify the new path to save the image
   const newPath = `uploads/${newFilename}`;
 
   // Write the file data to the new path
-  fs.writeFileSync(newPath, fileData);
+  fs.writeFileSync(newPath, data);
   const fileUrl = `http://localhost:8080/${newPath}`; // Replace with your actual domain or file URL
-  // Delete the temporary file
-  fs.unlinkSync(path);
 
   const newImage = {
-    name: originalname,
+    name,
     imageUrl: fileUrl,
   };
 

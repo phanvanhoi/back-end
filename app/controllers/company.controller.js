@@ -12,6 +12,26 @@ const async = require("async");
 
 const { handdleManyEmployee } = require("./employee.controller");
 
+const mapperColumn = {
+  STT: "A",
+  _id: "B",
+  name: "C",
+  numberPhone: "D",
+  birthday: "E",
+  sex: "F",
+  roleName: "G",
+  typeFashion: "H",
+};
+
+const border = {
+  top: { style: "thin" },
+  left: { style: "thin" },
+  bottom: { style: "thin" },
+  right: { style: "thin" },
+};
+
+const alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+
 // Create and Save a new Contract
 exports.create = (req, res) => {
   // Validate request
@@ -100,12 +120,6 @@ const getSetOfFashionByContract = async (setTypeFashionName) => {
 const createHeaderExcell = async (setTypeFashionName) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("DS CHUẨN HĐ 1");
-  const border = {
-    top: { style: "thin" },
-    left: { style: "thin" },
-    bottom: { style: "thin" },
-    right: { style: "thin" },
-  };
 
   const header = [
     {
@@ -171,6 +185,7 @@ const createHeaderExcell = async (setTypeFashionName) => {
 
   const typeOfFashion = await getSetOfFashionByContract(setTypeFashionName);
   const typeOfFashionItems = typeOfFashion.items;
+  const positionItems = [];
 
   if (!typeOfFashion.items) {
     return null;
@@ -182,6 +197,7 @@ const createHeaderExcell = async (setTypeFashionName) => {
     const items = Object.keys(typeOfFashionItems[properties].items || {});
     const itemObj = typeOfFashionItems[properties].items;
     const type = typeOfFashionItems[properties].type;
+
     if (type && typeof type === "object") {
       for (let typeProperties in type) {
         const length = items.length;
@@ -194,7 +210,7 @@ const createHeaderExcell = async (setTypeFashionName) => {
         worksheet.mergeCells(`${getColumnRange[0]}:${getColumnRange[getColumnRange.length - 1]}`);
         getCell = worksheet.getCell(getColumnRange[0]);
         getCell.border = border;
-        getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+        getCell.alignment = alignment;
         getCell.value = type[typeProperties] + " " + properties;
         getCell.height = 100;
 
@@ -202,13 +218,19 @@ const createHeaderExcell = async (setTypeFashionName) => {
           getCell = worksheet.getCell(col);
           getCell.border = border;
           getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true, textRotation: 90 };
+          let position = col.split("");
+          position = position.filter((value) => {
+            return isNaN(value) || isNaN(parseFloat(value));
+          });
+          position = position.toString();
+          positionItems.push({ name: items[index], value: position, sex: type[typeProperties] });
           getCell.value = items[index];
         });
 
         priceColumn.map((col, index) => {
           getCell = worksheet.getCell(col);
           getCell.border = border;
-          getCell.alignment = { horizontal: "center", vertical: "middle" };
+          getCell.alignment = alignment;
           getCell.value = itemObj[items[index]].price;
         });
       }
@@ -223,7 +245,7 @@ const createHeaderExcell = async (setTypeFashionName) => {
       worksheet.mergeCells(`${getColumnRange[0]}:${getColumnRange[getColumnRange.length - 1]}`);
       getCell = worksheet.getCell(getColumnRange[0]);
       getCell.border = border;
-      getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      getCell.alignment = alignment;
       getCell.value = properties;
       getCell.height = 100;
 
@@ -231,13 +253,19 @@ const createHeaderExcell = async (setTypeFashionName) => {
         getCell = worksheet.getCell(col);
         getCell.border = border;
         getCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true, textRotation: 90 };
+        let position = col.split("");
+        position = position.filter((value) => {
+          return isNaN(value) || isNaN(parseFloat(value));
+        });
+        position = position.toString();
+        positionItems.push({ name: items[index], value: position });
         getCell.value = items[index];
       });
 
       priceColumn.map((col, index) => {
         getCell = worksheet.getCell(col);
         getCell.border = border;
-        getCell.alignment = { horizontal: "center", vertical: "middle" };
+        getCell.alignment = alignment;
         getCell.value = itemObj[items[index]].price;
       });
     }
@@ -263,7 +291,7 @@ const createHeaderExcell = async (setTypeFashionName) => {
     bold: true,
   };
 
-  return workbook;
+  return { workbook, positionItems };
 };
 
 exports.downloadExcell = async (req, res) => {
@@ -275,8 +303,9 @@ exports.downloadExcell = async (req, res) => {
     res.status(422).send({ message: `Chưa chọn loại đồng phục` });
   }
 
-  const workbook = await createHeaderExcell(setTypeFashionName);
-  if (workbook === null) {
+  const result = await createHeaderExcell(setTypeFashionName);
+  const { workbook = {} } = result;
+  if (workbook === null || !workbook) {
     res.status(422).send({ message: `Bạn chưa thiết lập chức danh` });
   } else {
     // Set response headers
@@ -284,6 +313,98 @@ exports.downloadExcell = async (req, res) => {
     res.setHeader("Content-Disposition", 'attachment; filename="example.xlsx"');
 
     // Send the workbook as a response
+    workbook.xlsx.write(res).then(() => {
+      res.end();
+    });
+  }
+};
+
+const getcurrentCell = (positionItems, itemName, doc) => {
+  let result = "";
+  const type = doc.typeFashion.toLocaleLowerCase().includes("nam") ? "nam" : doc.typeFashion.toLocaleLowerCase().includes("nữ") ? "nữ" : "";
+  for (let properties in positionItems) {
+    const { name, value, sex = "" } = positionItems[properties];
+
+    if (name === itemName) {
+      if (type) {
+        if (sex && type === sex) {
+          result = value;
+          break;
+        }
+      } else {
+        result = value;
+        break;
+      }
+    }
+  }
+
+  return result;
+};
+
+exports.downloadExcellResult = async (req, res) => {
+  // Create a new workbook and worksheet
+
+  const companyId = req.params.id;
+  const urlParts = url.parse(req.url, true);
+  const { setTypeFashionName = "" } = urlParts.query;
+
+  if (!setTypeFashionName) {
+    res.status(422).send({ message: `Chưa chọn loại đồng phục` });
+  }
+
+  if (!companyId) {
+    res.status(422).send({ message: `Chưa chọn công ty` });
+  }
+
+  const result = await createHeaderExcell(setTypeFashionName);
+  const { workbook = null, positionItems } = result || {};
+  if (workbook === null || !workbook) {
+    res.status(422).send({ message: `Bạn chưa thiết lập chức danh` });
+  } else {
+    const wookSheet = workbook.getWorksheet("DS CHUẨN HĐ 1");
+    const employees = await Employee.find({ companyId }).exec();
+    employees.forEach((value, index) => {
+      const doc = value._doc;
+      const items = doc.items[setTypeFashionName].contract;
+      const currentRow = index + 5;
+
+      let currentCell;
+      for (let properties in mapperColumn) {
+        const rowExcell = mapperColumn[properties] + currentRow + "";
+        currentCell = wookSheet.getCell(rowExcell);
+        currentCell.alignment = alignment;
+        if (properties === "STT") {
+          currentCell.value = index + 1;
+        } else {
+          currentCell.value = doc[properties];
+        }
+      }
+
+      let sum = 0;
+      for (let properties in items) {
+        sum += items[properties].number * items[properties].price;
+        currentCell = getcurrentCell(positionItems, properties, doc);
+        if (currentCell) {
+          const rowExcell = currentCell + currentRow + "";
+          currentCell = wookSheet.getCell(rowExcell);
+          currentCell.alignment = alignment;
+          currentCell.value = items[properties].number;
+        }
+      }
+
+      const sumColumnNumber = Object.keys(mapperColumn).length + Object.keys(positionItems).length + 1;
+      const cell = getColumns(sumColumnNumber, sumColumnNumber + 1, currentRow);
+      if (cell && cell.length > 0) {
+        currentCell = wookSheet.getCell(cell[0]);
+        currentCell.value = sum;
+      }
+    });
+    // Set response headers
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", 'attachment; filename="example.xlsx"');
+
+    // Send the workbook as a response
+
     workbook.xlsx.write(res).then(() => {
       res.end();
     });
