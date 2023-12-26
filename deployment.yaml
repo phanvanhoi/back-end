@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-api-deployment
+  namespace: development
+  labels:
+    app: pod-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pod-api
+  template:
+    metadata:
+      labels:
+        app: pod-api
+    spec:
+      containers:
+        - name: pod-api-container
+          image: hoiphan/api:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
