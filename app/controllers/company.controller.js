@@ -304,7 +304,7 @@ exports.downloadExcell = async (req, res) => {
   }
 
   const result = await createHeaderExcell(setTypeFashionName);
-  const { workbook = {} } = result;
+  const { workbook } = result || {};
   if (workbook === null || !workbook) {
     res.status(422).send({ message: `Bạn chưa thiết lập chức danh` });
   } else {

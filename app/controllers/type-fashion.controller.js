@@ -1,3 +1,4 @@
+const url = require("url");
 const db = require("../models");
 const { typeFashion: TypeFashion, item: Item } = db;
 
@@ -51,6 +52,32 @@ exports.getAll = (req, res) => {
     .catch((err) => {
       res.status(500).send({
         message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};
+
+exports.findOneTypeFashion = (req, res) => {
+  const urlParts = url.parse(req.url, true);
+  const { name = "" } = urlParts.query;
+
+  TypeFashion.findOne({ name })
+    .then(async (data) => {
+      let result = {};
+      if (data) {
+        const doc = data._doc;
+        const itemIds = doc.items.split(",");
+        const items = await Item.find({ _id: { $in: itemIds } }).exec();
+        result = {
+          ...doc,
+          items,
+        };
+      }
+
+      res.send(result);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the TypeFashion.",
       });
     });
 };
