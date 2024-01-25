@@ -3,6 +3,7 @@ const db = require("../models");
 const { typeFashion: TypeFashion, item: Item } = db;
 
 const { typeFashion } = require("../schema/index");
+const { isNotNilOrEmpty } = require("ramda-adjunct");
 const { createSchema } = typeFashion;
 
 // Create and Save a new Contract
@@ -58,7 +59,13 @@ exports.getAll = (req, res) => {
 
 exports.findOneTypeFashion = (req, res) => {
   const urlParts = url.parse(req.url, true);
-  const { name = "" } = urlParts.query;
+  let { name = "" } = urlParts.query;
+  const nameSplit = name?.split(" ");
+
+  if ((isNotNilOrEmpty(nameSplit) && nameSplit?.[0] === "Nam") || nameSplit?.[0] === "Nữ") {
+    nameSplit?.splice(0, 1);
+    name = nameSplit.join(" ");
+  }
 
   TypeFashion.findOne({ name })
     .then(async (data) => {
