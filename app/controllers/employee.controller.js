@@ -251,3 +251,28 @@ exports.update = async (req, res) => {
       });
     });
 };
+exports.createOrUpdateActualContract = async (req, res) => {
+  const employeeId = req.params.id;
+  const { setTypeFashionName, items } = req.body;
+
+  if (!setTypeFashionName) {
+    res.status(402).send({ message: "setTypeFashionName is required!" });
+  }
+
+  const update = {
+    $set: {
+      [`items.${setTypeFashionName}.actual`]: items,
+    },
+  };
+
+  // Save Actual in the database
+  Employee.findOneAndUpdate({ _id: employeeId }, update)
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while creating the Contract.",
+      });
+    });
+};

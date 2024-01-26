@@ -1,3 +1,4 @@
+const { any } = require("joi");
 const { ObjectId } = require("mongodb");
 
 module.exports = (mongoose) => {
@@ -11,6 +12,7 @@ module.exports = (mongoose) => {
       companyId: ObjectId,
       numberPhone: String,
       typeFashion: String,
+      items: Object,
     },
     { timestamps: true },
     { strict: false }

@@ -60,12 +60,8 @@ exports.getAll = (req, res) => {
 exports.findOneTypeFashion = (req, res) => {
   const urlParts = url.parse(req.url, true);
   let { name = "" } = urlParts.query;
-  const nameSplit = name?.split(" ");
 
-  if ((isNotNilOrEmpty(nameSplit) && nameSplit?.[0] === "Nam") || nameSplit?.[0] === "Nữ") {
-    nameSplit?.splice(0, 1);
-    name = nameSplit.join(" ");
-  }
+  name = name.replace(/Nam |nam |Nữ |nữ /gi, "");
 
   TypeFashion.findOne({ name })
     .then(async (data) => {

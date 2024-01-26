@@ -8,6 +8,7 @@ module.exports = (app) => {
   router.get("/", employees.get);
   router.get("/company/:id", employees.get);
   router.post("/", employees.create);
+  router.post("/create-or-update-actual-contract/:id", employees.createOrUpdateActualContract);
   router.put("/:id", employees.update);
 
   app.use("/api/employees", router);
